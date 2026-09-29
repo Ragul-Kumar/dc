@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* shadcn/ui tokens → Durai palette (HSL channels) */
+  :root {
+    --background: 38 54% 93%; /* ivory  #F7F0E4 */
+    --foreground: 21 43% 16%; /* roast  #3A2317 */
+    --card: 0 0% 100%;
+    --card-foreground: 21 43% 16%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 21 43% 16%;
+    --primary: 9 64% 48%; /* apple  #C8442C */
+    --primary-foreground: 38 54% 93%;
+    --secondary: 37 49% 83%; /* sand   #E9D9BF */
+    --secondary-foreground: 21 43% 16%;
+    --muted: 37 49% 83%;
+    --muted-foreground: 25 17% 41%; /* muted  #7A6556 */
+    --accent: 37 49% 83%;
+    --accent-foreground: 21 43% 16%;
+    --destructive: 3 71% 41%; /* error  #B3261E */
+    --destructive-foreground: 0 0% 100%;
+    --border: 37 37% 78%; /* line   #DCCCB2 */
+    --input: 37 37% 78%;
+    --ring: 21 43% 16%;
+    --radius: 0.5rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-background font-sans text-foreground;
+  }
+  .font-display {
+    font-variation-settings: 'SOFT' 0, 'WONK' 1;
+  }
+}
+
+@layer components {
+  /* 80px page gutter on desktop, 16px on phones */
+  .page-x {
+    @apply px-4 md:px-10 xl:px-20;
+  }
+  .eyebrow {
+    @apply text-label font-bold uppercase text-muted-foreground;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+}
