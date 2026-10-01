@@ -44,16 +44,18 @@ export function CartDrawer() {
             <div className="flex-1 overflow-y-auto">
               <ul className="flex flex-col gap-3 px-6 py-2">
                 {lines.map((l) => (
-                  <li key={`${l.productId}-${l.grams}`} className="flex items-center gap-3.5 rounded-2xl bg-white p-3">
+                  <li key={`${l.productId}-${l.grams}-${l.sub ?? 0}-${l.bundle ? "b" : ""}`} className="flex items-center gap-3.5 rounded-2xl bg-white p-3">
                     <ProductThumb src={l.product.image} size={72} />
                     <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                       <p className="truncate text-[15px] font-bold">{l.product.name}</p>
                       <div className="flex items-center gap-1.5">
                         <Badge variant="grade">{l.product.grade}</Badge>
                         <span className="font-mono text-xs text-muted-foreground">{grams(l.grams)}</span>
+                        {l.sub ? <span className="rounded-full bg-mint px-2 py-0.5 text-[10px] font-bold text-leaf">every {l.sub} wk</span> : null}
+                        {l.bundle ? <span className="rounded-full bg-sand px-2 py-0.5 text-[10px] font-bold">trio</span> : null}
                       </div>
                       <div className="flex items-center gap-3">
-                        <QtyStepper value={l.qty} onChange={(q) => setQty(l, q)} />
+                        <QtyStepper value={l.qty} max={l.custom ? 500 : 20} onChange={(q) => setQty(l, q)} />
                         <button onClick={() => remove(l)} aria-label={`Remove ${l.product.name}`}>
                           <Icon name="trash" size={16} />
                         </button>
@@ -73,7 +75,7 @@ export function CartDrawer() {
                   <textarea
                     value={checkout.gift.message}
                     onChange={(e) =>
-                      updateCheckout({ gift: { ...checkout.gift, enabled: true, message: e.target.value } })
+                      updateCheckout({ gift: { ...checkout.gift, enabled: !!e.target.value.trim(), message: e.target.value } })
                     }
                     placeholder="Happy Deepavali, Amma!"
                     rows={2}

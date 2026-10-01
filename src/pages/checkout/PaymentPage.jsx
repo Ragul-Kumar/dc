@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -23,7 +23,7 @@ const METHODS = [
   { id: 'card', icon: 'card', title: 'Credit / debit card', sub: 'Secure fields by Razorpay or Cashfree · saved cards are tokenised' },
   { id: 'netbanking', icon: 'bank', title: 'Netbanking', sub: 'All major Indian banks' },
   { id: 'wallet', icon: 'wallet', title: 'Wallets', sub: 'Paytm, Amazon Pay, Mobikwik' },
-  { id: 'cod', icon: 'cash', title: 'Cash on Delivery', sub: `Pay in cash or UPI on delivery · up to ${inr(COD_LIMIT)} · ₹0 fee [confirm limit and fee]` },
+  { id: 'cod', icon: 'cash', title: 'Cash on Delivery', sub: `Pay in cash or UPI on delivery · up to ${inr(COD_LIMIT)} · ₹0 fee` },
 ]
 const UPI_APPS = ['GPay', 'PhonePe', 'Paytm', 'BHIM']
 const BANKS = ['HDFC', 'SBI', 'ICICI', 'Axis', 'Kotak', 'Indian Bank']
@@ -34,7 +34,8 @@ export default function PaymentPage() {
   const cart = useCart()
   const navigate = useNavigate()
   const { checkout, updateCheckout, lines, count, totals, coupon, address, placeOrder } = cart
-  const orderId = useMemo(() => `DC-${10000 + Math.floor(Math.random() * 90000)}`, [])
+  const timer = useRef(null)
+  useEffect(() => () => clearTimeout(timer.current), []) // a pending payment must not fire after leaving the page
   const [upiVerified, setUpiVerified] = useState(false)
   const [bank, setBank] = useState('')
   const [modal, setModal] = useState(null) // 'upi' | 'cod' | 'failed' | 'processing'
@@ -44,11 +45,15 @@ export default function PaymentPage() {
 
   const method = checkout.payment
   const codBlocked = method === 'cod' && totals.total > COD_LIMIT
-  const upiValid = /^[\w.-]+@[\w]+$/.test(checkout.upiId)
+  const upiValid = /^[\w.-]+@\w+$/.test(checkout.upiId)
+  const bill = checkout.billing
+  const billingBad = !checkout.billingSame && (!bill.name.trim() || !/^\d{6}$/.test(bill.pincode) || !bill.line1.trim())
+  const upiBlocked = method === 'upi' && !upiValid
+  const setBill = (patch) => updateCheckout({ billing: { ...bill, ...patch } })
 
   const finish = (paidVia) => {
     placeOrder({
-      id: orderId,
+      id: `DC-${10000 + Math.floor(Math.random() * 90000)}`,
       lines,
       totals,
       coupon,
@@ -58,6 +63,10 @@ export default function PaymentPage() {
       whatsapp: checkout.whatsapp,
       mobile: checkout.mobile,
       paidVia,
+      billing: checkout.billingSame ? null : checkout.billing,
+      gst: checkout.gst.enabled ? checkout.gst : null,
+      deliveryDate: checkout.deliveryDate || null,
+      email: checkout.email || null,
       placedAt: new Date().toISOString(),
     })
     navigate('/order/confirmed')
@@ -68,7 +77,7 @@ export default function PaymentPage() {
     if (method === 'upi') return setModal('upi')
     // Card / netbanking / wallet: the gateway handles it. Simulated here.
     setModal('processing')
-    setTimeout(() => finish(METHODS.find((m) => m.id === method).title), 1200)
+    timer.current = setTimeout(() => finish(METHODS.find((m) => m.id === method).title), 1200)
   }
 
   const onUpiApproved = () => {
@@ -86,7 +95,7 @@ export default function PaymentPage() {
           <div className="flex items-center gap-3 rounded-2xl bg-sand px-5 py-3.5">
             <Icon name="pin-lg" size={18} />
             <p className="min-w-0 flex-1 text-sm font-medium">
-              Order {orderId} · {count} {count === 1 ? 'item' : 'items'} · Deliver to {address.name.split(' ')[0]},{' '}
+              {count} {count === 1 ? 'item' : 'items'} · Deliver to {address.name.split(' ')[0]},{' '}
               {address.area}, {address.city} {address.pincode}
             </p>
             <Link to="/checkout/delivery" className="text-[13px] font-bold text-primary underline">
@@ -158,7 +167,9 @@ export default function PaymentPage() {
                                 <button
                                   key={a}
                                   onClick={() => setModal('upi')}
-                                  className="rounded-full border border-line bg-white px-3.5 py-2 text-xs font-bold hover:border-roast"
+                                  disabled={!upiValid}
+                                  title={upiValid ? undefined : 'Enter your UPI ID first'}
+                                  className="rounded-full border border-line bg-white px-3.5 py-2 text-xs font-bold hover:border-roast disabled:opacity-40"
                                 >
                                   {a}
                                 </button>
@@ -170,8 +181,7 @@ export default function PaymentPage() {
 
                       {selected && m.id === 'card' && (
                         <p className="rounded-xl bg-white p-4 text-[13px] text-muted-foreground">
-                          You’ll enter card details in the gateway’s secure window after tapping Pay. [wire Razorpay /
-                          Cashfree checkout here]
+                          You’ll enter card details in the gateway’s secure window after tapping Pay.
                         </p>
                       )}
 
@@ -230,9 +240,9 @@ export default function PaymentPage() {
                 </p>
               ) : (
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Input placeholder="Full name" aria-label="Billing name" />
-                  <Input placeholder="Pincode" aria-label="Billing pincode" inputMode="numeric" className="font-mono" />
-                  <Input placeholder="Address" aria-label="Billing address" className="sm:col-span-2" />
+                  <Input placeholder="Full name" aria-label="Billing name" value={bill.name} onChange={(e) => setBill({ name: e.target.value })} />
+                  <Input placeholder="Pincode" aria-label="Billing pincode" inputMode="numeric" className="font-mono" value={bill.pincode} onChange={(e) => setBill({ pincode: e.target.value.replace(/\D/g, '').slice(0, 6) })} />
+                  <Input placeholder="Address" aria-label="Billing address" className="sm:col-span-2" value={bill.line1} onChange={(e) => setBill({ line1: e.target.value })} />
                 </div>
               )}
             </CardContent>
@@ -249,7 +259,7 @@ export default function PaymentPage() {
             variant="gold"
             className="h-14 w-full text-base text-night"
             onClick={pay}
-            disabled={codBlocked || (method === 'netbanking' || method === 'wallet' ? !bank : false)}
+            disabled={codBlocked || billingBad || upiBlocked || (method === 'netbanking' || method === 'wallet' ? !bank : false)}
           >
             <Icon name="lock-dark" size={16} />
             {method === 'cod'

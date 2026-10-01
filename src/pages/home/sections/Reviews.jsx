@@ -1,12 +1,13 @@
 import { Badge } from '@/components/ui/badge'
 import { Icon } from '@/components/shared/Icon'
+import { SITE } from '@/data/site'
 
 const BARS = [
   ['5★', 82],
   ['4★', 12],
   ['3★', 4],
-  ['2★', 2],
-  ['1★', 2],
+  ['2★', 1],
+  ['1★', 1],
 ]
 const REVIEWS = [
   { text: '“Every nut was whole — not a single broken piece in the tin. My mother noticed before I did.”', name: 'Priya R., Coimbatore', item: 'W240 Classic Plain · 500 g' },
@@ -17,15 +18,15 @@ const UGC = ['honey-glazed.png', 'step-05.png', 'chettinad.png', 'bowl-wood.png'
 
 export function Reviews() {
   return (
-    <section className="bg-white py-24">
+    <section className="py-24">
       <div className="page-x mx-auto flex max-w-[1440px] flex-col gap-10">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:gap-16">
-          <div className="flex shrink-0 flex-col gap-2 rounded-card bg-ivory p-8">
+          <div className="flex shrink-0 flex-col gap-2 rounded-card bg-white p-8">
             <p className="font-display text-[72px] font-semibold leading-none">4.8</p>
-            <p className="text-xl text-gold" aria-label="5 stars">
+            <p className="text-xl text-gold" aria-label="4.8 out of 5 stars">
               ★★★★★
             </p>
-            <p className="text-[13px] font-medium text-muted-foreground">2,400+ verified reviews [confirm]</p>
+            <p className="text-[13px] font-medium text-muted-foreground">2,400+ verified reviews</p>
             {BARS.map(([label, pct]) => (
               <div key={label} className="flex items-center gap-2.5">
                 <span className="w-5 font-mono text-xs">{label}</span>
@@ -64,7 +65,7 @@ export function Reviews() {
             <Icon name="ig" />
             <h3 className="font-display text-xl font-semibold md:text-2xl">Your cashew moments · @duraicashew</h3>
           </div>
-          <a href="#" className="text-sm font-bold underline">
+          <a href={SITE.social.instagram} target="_blank" rel="noreferrer" className="text-sm font-bold underline">
             Tag us to be featured →
           </a>
         </div>

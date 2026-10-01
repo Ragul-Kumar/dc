@@ -1,6 +1,7 @@
 {
   "name": "durai-cashew",
   "private": true,
+  "engines": { "node": ">=18" },
   "version": "0.1.0",
   "type": "module",
   "scripts": {

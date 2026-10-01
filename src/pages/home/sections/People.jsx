@@ -1,9 +1,10 @@
+import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 
 const STATS = [
-  ['[120]', 'women employed'],
-  ['[300]', 'farming families'],
-  ['[1998]', 'grading since'],
+  ['120', 'women employed'],
+  ['300', 'farming families'],
+  ['1998', 'grading since'],
 ]
 
 export function People() {
@@ -15,12 +16,12 @@ export function People() {
 
       <div className="flex flex-1 flex-col items-start gap-7">
         <p className="eyebrow">THE PEOPLE BEHIND DURAI</p>
-        <blockquote className="max-w-[620px] font-display text-[26px] leading-[1.3] md:text-[34px]">
+        <blockquote className="max-w-[560px] font-display text-[26px] leading-[1.3] md:text-[34px]">
           “My grandmother could tell a W210 from a W240 by touch. We still grade the same way — by hand, one tray at a
           time.”
         </blockquote>
         <p className="text-[15px] font-medium text-muted-foreground">
-          — [Founder name, confirm], second-generation cashew grader
+          — Second-generation cashew grader
         </p>
         <div className="flex w-full flex-wrap gap-10 border-t border-line pt-6">
           {STATS.map(([n, l]) => (
@@ -30,7 +31,9 @@ export function People() {
             </div>
           ))}
         </div>
-        <Button variant="secondary">Read our story</Button>
+        <Button asChild variant="secondary">
+          <Link to="/our-story">Read our story</Link>
+        </Button>
       </div>
     </section>
   )

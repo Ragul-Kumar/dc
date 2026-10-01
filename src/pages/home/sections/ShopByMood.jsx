@@ -1,10 +1,11 @@
+import { Link } from 'react-router-dom'
 import { SectionHeading } from '@/components/shared/SectionHeading'
 
 const TILES = [
-  { title: 'Everyday snacking', sub: 'W240 & flavoured', img: 'mood-snacking.png' },
-  { title: 'Festive gifting', sub: 'Tins, boxes, sweets', img: 'bowl-wood.png' },
-  { title: 'Cooking & sweets', sub: 'Splits and pieces', img: 'factory.png' },
-  { title: 'Fitness fuel', sub: 'Raw, unsalted, portioned', img: 'chettinad.png' },
+  { title: 'Everyday snacking', sub: 'W240 & flavoured', img: 'mood-snacking.png', to: '/shop?grade=W240' },
+  { title: 'Festive gifting', sub: 'Tins, boxes, sweets', img: 'bowl-wood.png', to: '/gifting' },
+  { title: 'Cooking & sweets', sub: 'W320, made for the pan', img: 'factory.png', to: '/shop?grade=W320' },
+  { title: 'Fitness fuel', sub: 'Raw, unsalted, portioned', img: 'chettinad.png', to: '/shop?roast=Raw' },
 ]
 
 export function ShopByMood() {
@@ -12,14 +13,14 @@ export function ShopByMood() {
     <section className="page-x mx-auto flex max-w-[1440px] flex-col gap-10 pb-24 pt-12">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <SectionHeading eyebrow="SHOP BY MOOD" title="What are they for?" />
-        <a href="#" className="text-sm font-bold underline">
+        <Link to="/shop" className="text-sm font-bold underline">
           See all collections →
-        </a>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {TILES.map((t) => (
-          <a key={t.title} href="#" className="group relative h-[380px] overflow-hidden rounded-card bg-sand">
+          <Link key={t.title} to={t.to} className="group relative h-[380px] overflow-hidden rounded-card bg-sand">
             <img
               src={`/assets/images/${t.img}`}
               alt=""
@@ -30,7 +31,7 @@ export function ShopByMood() {
               <p className="font-display text-[26px] font-semibold text-ivory">{t.title}</p>
               <p className="text-sm font-medium text-sand">{t.sub} →</p>
             </div>
-          </a>
+          </Link>
         ))}
       </div>
     </section>

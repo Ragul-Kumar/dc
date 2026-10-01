@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Icon } from '@/components/shared/Icon'
 import { inr } from '@/lib/format'
+import { whatsappUrl } from '@/data/site'
 
 // Figma "16f · Checkout states" (27:3977). Each state is plain content so it can sit
 // in a Dialog on the payment page or inline in a card on the cart/delivery pages.
@@ -22,7 +23,7 @@ export function PaymentFailed({ amount, onRetry, onAnother }) {
           Another method
         </Button>
       </div>
-      <a href="#" className="flex items-center gap-1.5 text-[13px] font-bold underline">
+      <a href={whatsappUrl("Hi Durai Cashew, my payment failed")} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[13px] font-bold underline">
         <Icon name="wa-sm" size={16} />
         Need help? WhatsApp support
       </a>
@@ -33,7 +34,9 @@ export function PaymentFailed({ amount, onRetry, onAnother }) {
 export function UpiPending({ upiId, seconds = 300, onApproved, onSwitch, onExpire }) {
   const [left, setLeft] = useState(seconds)
   const expireRef = useRef(onExpire)
-  expireRef.current = onExpire
+  useEffect(() => {
+    expireRef.current = onExpire
+  })
   useEffect(() => {
     if (left <= 0) {
       expireRef.current?.()
@@ -78,8 +81,11 @@ export function UpiPending({ upiId, seconds = 300, onApproved, onSwitch, onExpir
   )
 }
 
+const DEMO_OTP = '1234'
+
 export function CodConfirm({ mobile, onConfirm, onCancel }) {
   const [digits, setDigits] = useState(['', '', '', ''])
+  const [error, setError] = useState('')
   const refs = useRef([])
   const complete = digits.every((d) => d !== '')
 
@@ -88,7 +94,23 @@ export function CodConfirm({ mobile, onConfirm, onCancel }) {
     const next = [...digits]
     next[i] = d
     setDigits(next)
+    setError('')
     if (d && i < 3) refs.current[i + 1]?.focus()
+  }
+
+  // pasting "1234" into any box fills all four
+  const paste = (e) => {
+    const text = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 4)
+    if (!text) return
+    e.preventDefault()
+    setDigits(Array.from({ length: 4 }, (_, i) => text[i] ?? ''))
+    setError('')
+    refs.current[Math.min(text.length, 4) - 1]?.focus()
+  }
+
+  const confirm = () => {
+    if (digits.join('') === DEMO_OTP) onConfirm()
+    else setError('That code doesn’t match. Check the WhatsApp message and try again.')
   }
 
   return (
@@ -100,22 +122,31 @@ export function CodConfirm({ mobile, onConfirm, onCancel }) {
       <p className="text-[15px] leading-[1.55]">
         We sent a WhatsApp message to {mobile}. Tap Confirm there, or enter the OTP.
       </p>
-      <div className="flex gap-2">
+      <div className="flex gap-2" onPaste={paste}>
         {digits.map((d, i) => (
           <input
             key={i}
             ref={(el) => (refs.current[i] = el)}
             value={d}
             inputMode="numeric"
+            autoComplete="one-time-code"
             aria-label={`OTP digit ${i + 1}`}
+            aria-invalid={!!error}
             onChange={(e) => setDigit(i, e.target.value)}
             onKeyDown={(e) => e.key === 'Backspace' && !d && i > 0 && refs.current[i - 1]?.focus()}
-            className="h-14 w-12 rounded-input border border-line bg-ivory text-center font-mono text-[22px] outline-none focus:border-roast"
+            className={`h-14 w-12 rounded-input border bg-ivory text-center font-mono text-[22px] outline-none focus:border-roast ${error ? 'border-[1.5px] border-error' : 'border-line'}`}
           />
         ))}
       </div>
+      {error ? (
+        <p className="text-[13px] font-medium text-error" role="alert">
+          {error}
+        </p>
+      ) : (
+        <p className="text-xs text-muted-foreground">Demo: the code is {DEMO_OTP} until WhatsApp OTP is connected.</p>
+      )}
       <div className="flex flex-wrap gap-2.5">
-        <Button onClick={onConfirm} disabled={!complete}>
+        <Button onClick={confirm} disabled={!complete}>
           Confirm order
         </Button>
         <Button variant="secondary" onClick={onCancel}>

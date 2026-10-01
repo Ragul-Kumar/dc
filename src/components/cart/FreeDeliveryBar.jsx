@@ -41,9 +41,11 @@ export function FreeDeliveryBar({ variant = 'drawer' }) {
       <div className="h-2 overflow-hidden rounded bg-line">
         <div className="h-full rounded bg-leaf transition-all" style={{ width: `${pct}%` }} />
       </div>
-      <p className="font-mono text-[11px] text-muted-foreground">
-        {inr(totals.subtotal)} of {inr(FREE_DELIVERY_AT)}
-      </p>
+      {!totals.freeDelivery && (
+        <p className="font-mono text-[11px] text-muted-foreground">
+          {inr(totals.subtotal)} of {inr(FREE_DELIVERY_AT)}
+        </p>
+      )}
     </div>
   )
 }

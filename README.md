@@ -54,3 +54,35 @@ Design tokens live in `tailwind.config.js` (brand colours, fonts, radii) and `sr
 - Card / netbanking / wallet simulate the gateway — wire Razorpay or Cashfree in `PaymentPage.jsx`.
 
 Anything marked `[confirm]` is placeholder copy carried over from the Figma.
+
+## Phase 2 routes
+
+| Route | Figma |
+|---|---|
+| `/shop`, `/shop/:id` | 03 · Shop all, 04 · Product page |
+| `/subscribe` | 06 · Subscribe and save |
+| `/gifting`, `/gifting/build`, `/gifting/corporate` | 07 · Gifting hub, 08 · Gift box builder, 09 · Corporate gifting |
+| `/wholesale` | 10 · Wholesale (B2B) |
+| `/our-story` | 11 · Our story |
+| `/journal`, `/journal/:slug` | 13 · Cashew Journal, 14 · Journal article |
+| `/contact` | 15 · Contact |
+| `/account`, `/track-order` | 17 · Account, 18 · Track order |
+| `/faq`, `/policies/:slug` | 19 · FAQ and policies |
+
+Forms (quote, wholesale enquiry, contact, subscription start) acknowledge on screen only — no backend yet.
+Gift boxes and builder boxes are added to the cart as custom lines (`addCustom` in `CartContext`).
+
+## Configuration & demo behaviour (after QA)
+
+- `src/data/site.js` — phone, WhatsApp number, address, FSSAI no., social links, certifications. Anything left empty is
+  hidden (no placeholder text on screen). Fill these in before launch.
+- Coupons: `DIWALI100` (₹100 off + free delivery, min ₹499), `FIRST10` (10% off up to ₹150, min ₹299), `PONGAL50` (expired).
+- Subscribe on a product page adds the pack at 10% off ("every 4 wk" on the line); gift wrap adds ₹49 once per order;
+  the product page's Tasting Trio adds 3 × 100 g packs and gets 15% off when all three are in the cart; 25+ gift boxes
+  get 5% off and 50+ get 10% (corporate per-box prices are quoted, not applied in the cart).
+- Forms (corporate quote, wholesale, contact, careers, newsletter) are saved on this device (`durai-enquiries-v1`) and
+  acknowledged with a reference — wire them to an endpoint in `src/lib/enquiries.js`.
+- Reviews written on a product page are kept on this device. COD demo OTP is `1234`.
+- "PDF" downloads (invoice, catalogue, spec sheets, lab report) open a printable page — use Save as PDF.
+- Track order: your own orders (placed on this device) track from their real timestamps; `DC-10482` is a sample shipment.
+- Deploying: `public/_redirects` (Netlify) and `vercel.json` rewrite deep links to `index.html`.

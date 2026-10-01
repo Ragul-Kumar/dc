@@ -8,14 +8,61 @@ import { CheckoutLayout, SummaryCard } from '@/components/checkout/CheckoutLayou
 import { SummaryItems } from '@/components/checkout/SummaryItems'
 import { PriceLines } from '@/components/checkout/PriceLines'
 import { useCart } from '@/context/CartContext'
+import { printDocument } from '@/lib/print'
 import { deliveryDate, inr, shortAddress } from '@/lib/format'
 import { cn } from '@/lib/utils'
 
 // Figma "16e · Order confirmed" (27:3840)
 export default function ConfirmedPage() {
   const { order } = useCart()
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState('') // '' | 'ok' | 'failed'
+  // a confirmation older than a day is history, not a live page: send people to order tracking instead
+  const stale = order && Date.now() - new Date(order.placedAt).getTime() > 24 * 60 * 60 * 1000
   if (!order) return <Navigate to="/" replace />
+  if (stale) return <Navigate to={`/track-order?order=${order.id}`} replace />
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(`https://${referral}`)
+      setCopied('ok')
+    } catch {
+      setCopied('failed')
+    }
+    setTimeout(() => setCopied(''), 2000)
+  }
+
+  const downloadInvoice = () =>
+    printDocument(`Invoice ${order.id}`, [
+      {
+        heading: 'Order',
+        rows: [
+          ['Order number', order.id],
+          ['Placed', new Date(order.placedAt).toLocaleString('en-IN')],
+          ['Payment', order.paidVia],
+          ['Deliver to', order.gift?.hidePrices && order.gift?.enabled ? shortAddress(order.address) : shortAddress(order.address)],
+          ...(order.gst ? [['GSTIN', `${order.gst.gstin} · ${order.gst.company || ''}`]] : []),
+        ],
+      },
+      {
+        heading: 'Items',
+        rows: order.lines.map((l) => [
+          `${l.product.name} · ${l.grams >= 1000 ? l.grams / 1000 + ' kg' : l.grams + ' g'} × ${l.qty}`,
+          order.gift?.enabled && order.gift?.hidePrices ? '—' : inr(l.total),
+        ]),
+      },
+      {
+        heading: 'Totals',
+        rows: order.gift?.enabled && order.gift?.hidePrices
+          ? [['Prices hidden — gift invoice', '']]
+          : [
+              ['Subtotal', inr(order.totals.subtotal)],
+              ...(order.totals.discount ? [[`Coupon ${order.coupon}`, `−${inr(order.totals.discount)}`]] : []),
+              ...(order.totals.giftWrap ? [['Gift wrap', inr(order.totals.giftWrap)]] : []),
+              ['Delivery', order.totals.delivery ? inr(order.totals.delivery) : 'Free'],
+              ['Total', inr(order.totals.total)],
+            ],
+      },
+    ])
 
   const cod = order.paidVia === 'Cash on Delivery'
   const firstName = order.address.name.split(' ')[0]
@@ -39,7 +86,7 @@ export default function ConfirmedPage() {
               <span className="flex size-10 items-center justify-center rounded-full bg-success">
                 <Icon name="check-lg-white" size={22} />
               </span>
-              <span className="font-tamil text-xl font-semibold text-gold">நன்றி</span>
+              <span lang="ta" className="font-tamil text-xl font-semibold text-gold">நன்றி</span>
             </div>
             <h1 className="max-w-[760px] font-display text-[30px] font-semibold leading-[1.15] text-ivory md:text-h2">
               Nandri, {firstName}! Your order is confirmed.
@@ -52,11 +99,13 @@ export default function ConfirmedPage() {
               ))}
             </div>
             <div className="mt-1 flex flex-wrap items-center gap-3">
-              <Button>Track order</Button>
+              <Button asChild>
+                <Link to={`/track-order?order=${order.id}`}>Track order</Link>
+              </Button>
               <Button variant="onDark" asChild>
                 <Link to="/">Continue shopping</Link>
               </Button>
-              <button className="flex items-center gap-1.5 text-sm font-bold text-sand underline">
+              <button type="button" onClick={downloadInvoice} className="flex items-center gap-1.5 text-sm font-bold text-sand underline">
                 <Icon name="download" size={16} />
                 Download invoice
               </button>
@@ -138,18 +187,12 @@ export default function ConfirmedPage() {
             <Icon name="gift-gold" size={28} />
             <h3 className="font-display text-[28px] font-semibold text-ivory">Give ₹100, get ₹100</h3>
             <p className="text-sm leading-[1.55] text-sand">
-              Share your link. When a friend orders, you both get ₹100 off. [confirm offer]
+              Share your link. When a friend orders, you both get ₹100 off.
             </p>
             <div className="flex w-fit max-w-full items-center gap-2 rounded-full bg-ivory/10 px-4 py-2.5 text-[13px]">
               <span className="truncate font-mono text-ivory">{referral}</span>
-              <button
-                className="font-bold text-gold"
-                onClick={() => {
-                  navigator.clipboard?.writeText(`https://${referral}`)
-                  setCopied(true)
-                }}
-              >
-                {copied ? 'Copied' : 'Copy'}
+              <button type="button" className="font-bold text-gold" onClick={copyLink} aria-live="polite">
+                {copied === 'ok' ? 'Copied' : copied === 'failed' ? 'Copy failed' : 'Copy'}
               </button>
             </div>
           </div>

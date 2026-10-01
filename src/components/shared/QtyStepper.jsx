@@ -1,8 +1,8 @@
 import { cn } from '@/lib/utils'
 
-export function QtyStepper({ value, onChange, size = 'sm', className }) {
+export function QtyStepper({ value, onChange, size = 'sm', min = 1, max = 20, className }) {
   const btn =
-    'flex items-center justify-center rounded font-bold leading-none outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40'
+    'flex items-center justify-center rounded font-bold leading-none outline-none hover:text-primary focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40 disabled:hover:text-inherit'
   return (
     <div
       className={cn(
@@ -11,19 +11,13 @@ export function QtyStepper({ value, onChange, size = 'sm', className }) {
         className
       )}
     >
-      <button type="button" className={btn} onClick={() => onChange(value - 1)} aria-label="Decrease quantity">
+      <button type="button" className={btn} onClick={() => onChange(value - 1)} disabled={value <= min} aria-label="Decrease quantity">
         −
       </button>
       <span className="min-w-[1ch] text-center tabular-nums" aria-live="polite">
         {value}
       </span>
-      <button
-        type="button"
-        className={btn}
-        onClick={() => onChange(value + 1)}
-        disabled={value >= 20}
-        aria-label="Increase quantity"
-      >
+      <button type="button" className={btn} onClick={() => onChange(value + 1)} disabled={value >= max} aria-label="Increase quantity">
         +
       </button>
     </div>

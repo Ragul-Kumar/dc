@@ -1,0 +1,21 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="520" height="300" viewBox="0 0 520 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Map" clip-path="url(#clip0_0_297)">
+<path id="Vector" d="M500 0H20C8.9543 0 0 8.9543 0 20V280C0 291.046 8.9543 300 20 300H500C511.046 300 520 291.046 520 280V20C520 8.9543 511.046 0 500 0Z" fill="#E9D9BF"/>
+<path id="Vector_2" d="M0 200C120 180 200 230 320 190C440 150 480 150 520 170" stroke="#F7F0E4" stroke-width="14"/>
+<g id="Vector_3">
+<path d="M180 0L220 300Z" fill="black"/>
+<path d="M180 0L220 300" stroke="#F7F0E4" stroke-width="10"/>
+</g>
+<g id="Vector_4">
+<path d="M380 0L340 300Z" fill="black"/>
+<path d="M380 0L340 300" stroke="#F7F0E4" stroke-width="6"/>
+</g>
+<path id="Vector_5" d="M260 168C269.941 168 278 159.941 278 150C278 140.059 269.941 132 260 132C250.059 132 242 140.059 242 150C242 159.941 250.059 168 260 168Z" fill="#C8442C"/>
+<path id="Vector_6" d="M260 156C263.314 156 266 153.314 266 150C266 146.686 263.314 144 260 144C256.686 144 254 146.686 254 150C254 153.314 256.686 156 260 156Z" fill="#F7F0E4"/>
+</g>
+<defs>
+<clipPath id="clip0_0_297">
+<rect width="520" height="300" fill="white"/>
+</clipPath>
+</defs>
+</svg>

@@ -1,9 +1,10 @@
+import { Link } from 'react-router-dom'
 import { SectionHeading } from '@/components/shared/SectionHeading'
 
 const ARTICLES = [
-  { tag: 'RECIPE · 12 MIN', title: 'Kaju masala in 20 minutes, with W320', img: 'factory.png' },
-  { tag: 'GRADE GUIDE · 6 MIN', title: 'W180 vs W240: is bigger worth it?', img: 'bowl-wood.png' },
-  { tag: 'BEHIND THE SCENES · 4 MIN', title: 'A day on the grading floor', img: 'step-05.png' },
+  { tag: 'RECIPE · 12 MIN', title: 'Kaju masala in 20 minutes, with W320', img: 'factory.png', slug: 'kaju-masala-20-minutes' },
+  { tag: 'GRADE GUIDE · 6 MIN', title: 'W180 vs W240: is bigger worth it?', img: 'bowl-wood.png', slug: 'w180-vs-w240' },
+  { tag: 'BEHIND THE SCENES · 8 MIN', title: 'A day on the grading floor', img: 'step-05.png', slug: 'a-day-on-the-grading-floor' },
 ]
 
 export function JournalTeaser() {
@@ -11,14 +12,14 @@ export function JournalTeaser() {
     <section className="page-x mx-auto flex max-w-[1440px] flex-col gap-10 py-24">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <SectionHeading eyebrow="CASHEW JOURNAL" title="Recipes, grade guides and stories" />
-        <a href="#" className="text-sm font-bold underline">
+        <Link to="/journal" className="text-sm font-bold underline">
           Read the Journal →
-        </a>
+        </Link>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
         {ARTICLES.map((a) => (
-          <a key={a.title} href="#" className="group flex flex-col gap-3.5">
+          <Link key={a.title} to={`/journal/${a.slug}`} className="group flex flex-col gap-3.5">
             <div className="h-[260px] overflow-hidden rounded-card">
               <img
                 src={`/assets/images/${a.img}`}
@@ -30,7 +31,7 @@ export function JournalTeaser() {
             <h3 className="max-w-[400px] font-display text-2xl font-semibold leading-tight group-hover:underline">
               {a.title}
             </h3>
-          </a>
+          </Link>
         ))}
       </div>
     </section>

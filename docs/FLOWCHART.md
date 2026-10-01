@@ -48,11 +48,11 @@ flowchart LR
 | 1 | Offer bar | 14:3 | `components/layout/OfferBar.jsx` |
 | 2 | Header | 14:8 | `components/layout/Header.jsx` |
 | 3 | Hero | 14:35 | `pages/home/sections/Hero.jsx` |
-| 4 | Shop by mood | 14:85 | `ShopByMood.jsx` |
-| 5 | Bestsellers shelf | 14:116 | `Bestsellers.jsx` (Add to cart) |
+| 4 | Bestsellers shelf | 14:116 | `Bestsellers.jsx` (Add to cart) |
+| 5 | Shop by mood | 14:85 | `ShopByMood.jsx` |
 | 6 | Grade story | 14:296 | `GradeStory.jsx` |
 | 7 | From tree to tin | 14:401 | `TreeToTin.jsx` |
-| 8 | Freshness promise | 14:445 | `FreshnessPromise.jsx` |
+| 8 | (Freshness promise — removed in v3) | 14:445 | `FreshnessPromise.jsx` |
 | 9 | Gifting spotlight | 15:199 | `GiftingSpotlight.jsx` |
 | 10 | People behind Durai | 15:313 | `People.jsx` |
 | 11 | Reviews & UGC | 15:332 | `Reviews.jsx` |
@@ -120,3 +120,12 @@ Radius: 8 inputs · 20 cards · 32 media · pill buttons. Grid: 1280 max, 80px p
 
 03 Shop all → 04 Product page → 05 Grade guide → 06 Subscribe → 07–09 Gifting → 10 Wholesale →
 11 Our story → 12 Quality → 13–14 Journal → 15 Contact → 17 Account → 18 Track order → 19 FAQ
+
+## Phase 2 progress
+
+- [x] 03 · Shop all (`/shop`, node 39:4993) — filter bar (URL-synced), sort, 3-col grid, compare checkbox, grade-guide tile, empty state, all-filters sheet. Header nav is now real routes (Subscribe added).
+- [x] 04 · Product page (`/shop/:id`, node 39:5143) — gallery + zoom, pack/subscribe selectors, pincode check, trust strip, spec/taste, nutrition/batch, recipes, reviews + Q&A, pairs + bundle, mobile sticky bar. Shop cards link to it.
+- [x] 06 Subscribe (`/subscribe`) · 07 Gifting hub (`/gifting`) · 08 Gift box builder (`/gifting/build`) · 09 Corporate gifting (`/gifting/corporate`)
+- [x] 10 Wholesale (`/wholesale`) · 11 Our story (`/our-story`) · 13 Journal (`/journal`) · 14 Article (`/journal/:slug`) · 15 Contact (`/contact`)
+- [x] 17 Account (`/account`) · 18 Track order (`/track-order`) · 19 FAQ (`/faq`) and policies (`/policies/:slug`)
+- Added after QA: /grades, /flavours, /quality, /sustainability, /careers, /press, /stores, /sitemap, /search, /compare and a real 404. Still not designed in Figma: login/sign-up, wishlist page, admin dashboard.

@@ -33,17 +33,31 @@ export default function DeliveryPage() {
   const isNew = checkout.addressId === 'new'
   const pin = lookupPincode(addr.pincode)
   const set = (patch) => updateCheckout(patch)
-  const setGift = (patch) => set({ gift: { ...checkout.gift, ...patch } })
-  const setGst = (patch) => set({ gst: { ...checkout.gst, ...patch } })
+  const clearErrors = (...keys) => setErrors((e) => Object.fromEntries(Object.entries(e).filter(([k]) => !keys.includes(k))))
+  const setGift = (patch) => {
+    set({ gift: { ...checkout.gift, ...patch } })
+    clearErrors('recipient')
+  }
+  const setGst = (patch) => {
+    set({ gst: { ...checkout.gst, ...patch } })
+    clearErrors('gstin')
+  }
+
+  // every keystroke is written back to the cart state, so leaving and returning keeps the form
+  const change = (patch) => {
+    const next = { ...addr, ...patch }
+    setAddr(next)
+    set({ newAddress: { ...next, id: 'new', label: 'New', area: next.line2 || next.district } })
+    clearErrors(...Object.keys(patch))
+  }
 
   const setPincode = (value) => {
     const pincode = value.replace(/\D/g, '').slice(0, 6)
     const info = lookupPincode(pincode)
-    setAddr((a) => ({
-      ...a,
-      pincode,
-      ...(info.place ? { city: info.place.city, district: info.place.district, state: info.place.state } : {}),
-    }))
+    if (info.place) change({ pincode, city: info.place.city, district: info.place.district, state: info.place.state })
+    // the previous pincode had auto-filled the place and this one doesn't match: clear it so stale values can't be saved
+    else if (pin.place) change({ pincode, city: '', district: '', state: '' })
+    else change({ pincode })
   }
 
   const validate = () => {
@@ -56,6 +70,7 @@ export default function DeliveryPage() {
       if (!addr.state.trim()) e.state = 'Required'
       if (!addr.line1.trim()) e.line1 = 'Enter house number and street'
     }
+    if (checkout.email.trim() && !/^\S+@\S+\.\S+$/.test(checkout.email.trim())) e.email = 'Enter a valid email address'
     if (checkout.gift.enabled && !checkout.gift.recipient.trim()) e.recipient = 'Who is the gift for?'
     if (checkout.gst.enabled && !/^[0-9A-Z]{15}$/i.test(checkout.gst.gstin)) e.gstin = 'GSTIN is 15 characters'
     setErrors(e)
@@ -64,13 +79,15 @@ export default function DeliveryPage() {
 
   const next = () => {
     if (!validate()) return
-    if (isNew) {
-      set({
-        newAddress: { ...addr, id: 'new', label: 'New', area: addr.line2 || addr.district },
-      })
-    }
     navigate('/checkout/payment')
   }
+
+  // earliest delivery date offered (3 days out), as yyyy-mm-dd for the date input
+  const minDate = (() => {
+    const d = new Date()
+    d.setDate(d.getDate() + 3)
+    return d.toISOString().slice(0, 10)
+  })()
 
   return (
     <CheckoutLayout
@@ -83,21 +100,24 @@ export default function DeliveryPage() {
               <CardTitle>Contact information</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-[18px] pt-[18px]">
-              <Field label="Mobile number" hint="We send one OTP the first time only. Order updates come here.">
+              <Field label="Mobile number" htmlFor="mobile" hint="We send one OTP the first time only. Order updates come here.">
                 <div className="flex h-12 items-center justify-between rounded-input border border-line bg-white px-3.5">
-                  <span className="font-mono text-[15px]">{checkout.mobile}</span>
+                  <output id="mobile" className="font-mono text-[15px]">{checkout.mobile}</output>
                   <span className="flex items-center gap-1 text-xs font-bold text-success">
                     <Icon name="check-green" size={14} />
                     Verified
                   </span>
                 </div>
               </Field>
-              <Field label="Email for invoice" optional htmlFor="email">
+              <Field label="Email for invoice" optional htmlFor="email" error={errors.email}>
                 <Input
                   id="email"
                   type="email"
                   value={checkout.email}
-                  onChange={(e) => set({ email: e.target.value })}
+                  onChange={(e) => {
+                    set({ email: e.target.value })
+                    clearErrors('email')
+                  }}
                   placeholder="you@email.com"
                 />
               </Field>
@@ -120,7 +140,7 @@ export default function DeliveryPage() {
                 onValueChange={(v) => set({ addressId: v })}
                 className="grid gap-3 sm:grid-cols-2"
               >
-                {SAVED_ADDRESSES.map((a) => (
+                {cart.allAddresses.map((a) => (
                   <AddressOption key={a.id} value={a.id} selected={checkout.addressId === a.id} label={a.label}>
                     {a.name} · {a.line1}, {a.area}, {a.city} {a.pincode}
                   </AddressOption>
@@ -160,7 +180,7 @@ export default function DeliveryPage() {
                           id={k}
                           value={addr[k]}
                           disabled={!!pin.place}
-                          onChange={(e) => setAddr({ ...addr, [k]: e.target.value })}
+                          onChange={(e) => change({ [k]: e.target.value })}
                         />
                       </Field>
                     ))}
@@ -173,13 +193,13 @@ export default function DeliveryPage() {
                   )}
 
                   <Field label="Full name" htmlFor="name" error={errors.name}>
-                    <Input id="name" value={addr.name} onChange={(e) => setAddr({ ...addr, name: e.target.value })} />
+                    <Input id="name" value={addr.name} onChange={(e) => change({ name: e.target.value })} />
                   </Field>
                   <Field label="Address line 1" htmlFor="line1" error={errors.line1}>
                     <Input
                       id="line1"
                       value={addr.line1}
-                      onChange={(e) => setAddr({ ...addr, line1: e.target.value })}
+                      onChange={(e) => change({ line1: e.target.value })}
                       placeholder="House no., street"
                     />
                   </Field>
@@ -188,7 +208,7 @@ export default function DeliveryPage() {
                       <Input
                         id="line2"
                         value={addr.line2}
-                        onChange={(e) => setAddr({ ...addr, line2: e.target.value })}
+                        onChange={(e) => change({ line2: e.target.value })}
                         placeholder="Flat / floor"
                       />
                     </Field>
@@ -196,7 +216,7 @@ export default function DeliveryPage() {
                       <Input
                         id="landmark"
                         value={addr.landmark}
-                        onChange={(e) => setAddr({ ...addr, landmark: e.target.value })}
+                        onChange={(e) => change({ landmark: e.target.value })}
                       />
                     </Field>
                   </div>
@@ -204,7 +224,7 @@ export default function DeliveryPage() {
                     <Input
                       id="notes"
                       value={addr.notes}
-                      onChange={(e) => setAddr({ ...addr, notes: e.target.value })}
+                      onChange={(e) => change({ notes: e.target.value })}
                       placeholder="e.g. Leave with security"
                     />
                   </Field>
@@ -216,6 +236,25 @@ export default function DeliveryPage() {
                   />
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Delivery date */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Delivery date</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3 pt-[18px]">
+              <Field label="Preferred date" optional htmlFor="delivery-date" hint="Leave empty for the earliest delivery. Gifts for a festival? Pick the day it should arrive.">
+                <Input
+                  id="delivery-date"
+                  type="date"
+                  min={minDate}
+                  value={checkout.deliveryDate}
+                  onChange={(e) => set({ deliveryDate: e.target.value })}
+                  className="max-w-[240px] font-mono"
+                />
+              </Field>
             </CardContent>
           </Card>
 
@@ -231,6 +270,12 @@ export default function DeliveryPage() {
             </CardHeader>
             <CardContent className="flex flex-col gap-[18px] pt-[18px]">
               <p className="text-sm text-muted-foreground">We’ll hide prices and add your message on a card.</p>
+              <CheckRow
+                id="gift-wrap"
+                checked={checkout.gift.wrap}
+                onChange={(v) => setGift({ wrap: v })}
+                label="Add gift wrap and a handwritten note (+₹49)"
+              />
               {checkout.gift.enabled && (
                 <>
                   <Field label="Gift message" htmlFor="gift-msg">
@@ -238,6 +283,7 @@ export default function DeliveryPage() {
                       id="gift-msg"
                       rows={2}
                       value={checkout.gift.message}
+                      maxLength={200}
                       onChange={(e) => setGift({ message: e.target.value })}
                       placeholder="Happy Deepavali, Amma!"
                       className="min-h-[72px] w-full rounded-input border border-line bg-white px-3.5 py-3 text-[15px] outline-none focus:border-roast"

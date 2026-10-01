@@ -1,23 +1,36 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Icon } from '@/components/shared/Icon'
-import { FLAVOURS } from '@/data/products'
+import { FLAVOURS, defaultSize } from '@/data/products'
 import { grams, inr, perHundred } from '@/lib/format'
 import { useCart } from '@/context/CartContext'
 import { cn } from '@/lib/utils'
 
-// Figma "Product card" (12:118)
-export function ProductCard({ product, className }) {
+// Figma "Product card" (12:118). `listing` is the Shop all variant (39:5057): fluid width,
+// flavour-tinted photo well, Fraunces name and an outlined Quick add.
+export function ProductCard({ product, listing = false, className }) {
   const { add } = useCart()
   const [wished, setWished] = useState(false)
-  const size = product.sizes[0]
+  const size = defaultSize(product)
   const flavour = FLAVOURS[product.flavour]
 
   return (
-    <article className={cn('flex w-[302px] shrink-0 flex-col gap-3.5 rounded-card bg-sand p-3', className)}>
-      <div className="relative flex h-[220px] items-center justify-center rounded-2xl bg-white p-5">
-        <img src={product.image} alt={product.name} className="size-full object-contain" />
+    <article
+      className={cn('flex flex-col gap-3.5 rounded-card bg-sand p-3', listing ? 'w-full' : 'w-[302px] shrink-0', className)}
+    >
+      <div
+        className={cn(
+          'relative flex h-[220px] items-center justify-center p-5',
+          listing ? 'rounded-2xl' : 'rounded-2xl bg-white'
+        )}
+        style={listing ? { background: flavour.tint } : undefined}
+      >
+        <Link to={`/shop/${product.id}`} className="size-full" aria-label={product.name}>
+          <img src={product.image} alt="" className="size-full object-contain" />
+        </Link>
         <Badge variant="grade" className="absolute left-3 top-3">
           {product.grade}
         </Badge>
@@ -38,10 +51,15 @@ export function ProductCard({ product, className }) {
             {flavour.name} · {product.style}
           </p>
         </div>
-        <h3 className="text-xl font-bold leading-tight">{product.name}</h3>
+        <h3 className={cn(listing ? 'font-display text-[22px] font-semibold leading-tight' : 'text-xl font-bold leading-tight')}>
+          <Link to={`/shop/${product.id}`} className="hover:underline">
+            {product.name}
+          </Link>
+        </h3>
         <div className="flex items-center gap-1.5">
-          <span className="text-[13px] text-gold" aria-hidden>
-            ★★★★★
+          <span className="text-[13px] text-gold" role="img" aria-label={`${product.rating} out of 5 stars`}>
+            {"★".repeat(Math.round(product.rating))}
+            <span className="text-line">{"★".repeat(5 - Math.round(product.rating))}</span>
           </span>
           <span className="text-xs font-medium text-muted-foreground">
             {product.rating} ({product.reviews})
@@ -54,13 +72,18 @@ export function ProductCard({ product, className }) {
         <div className="flex items-center gap-1.5">
           <Icon name="leaf-sm" size={14} />
           <p className="text-xs font-medium text-leaf">
-            Roasted {product.roasted} · {grams(size.grams)}
+            {product.dateLabel ?? 'Roasted'} {product.roasted} · {grams(size.grams)}
           </p>
         </div>
       </div>
 
-      <Button size="sm" className="w-full" onClick={() => add(product.id, size.grams)}>
-        <Icon name="plus" size={16} />
+      <Button
+        size="sm"
+        variant={listing ? 'secondary' : 'default'}
+        className="w-full"
+        onClick={() => add(product.id, size.grams)}
+      >
+        {listing ? <Plus strokeWidth={1.5} /> : <Icon name="plus" size={16} />}
         Quick add
       </Button>
     </article>

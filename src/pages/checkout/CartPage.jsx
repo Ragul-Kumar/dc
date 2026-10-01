@@ -43,7 +43,7 @@ export default function CartPage() {
             </CardHeader>
             <CardContent className="flex flex-col pt-5">
               {lines.map((l, i) => (
-                <CartLine key={`${l.productId}-${l.grams}`} line={l} last={i === lines.length - 1} />
+                <CartLine key={`${l.productId}-${l.grams}-${l.sub ?? 0}-${l.bundle ? "b" : ""}`} line={l} last={i === lines.length - 1} />
               ))}
             </CardContent>
           </Card>
@@ -75,7 +75,7 @@ const isSoldOut = (l) => l.product.sizes.find((s) => s.grams === l.grams)?.soldO
 
 function CartLine({ line, last }) {
   const { setQty, setSize, remove, add } = useCart()
-  const flavour = FLAVOURS[line.product.flavour]
+  const flavour = FLAVOURS[line.product.flavour] ?? { name: 'Gift box', color: '#C99A45' }
   const soldOut = isSoldOut(line)
 
   // Suggest the largest in-stock size that divides the requested weight
@@ -101,6 +101,8 @@ function CartLine({ line, last }) {
             <Badge variant="grade">{line.product.grade}</Badge>
             <span className="size-2.5 shrink-0 rounded-full border border-line" style={{ background: flavour.color }} />
             <span className="truncate text-xs font-medium text-muted-foreground">{flavour.name}</span>
+            {line.sub ? <span className="rounded-full bg-mint px-2 py-0.5 text-[10px] font-bold text-leaf">Subscribe · every {line.sub} wk</span> : null}
+            {line.bundle ? <span className="rounded-full bg-sand px-2 py-0.5 text-[10px] font-bold">Tasting trio</span> : null}
           </div>
           <div className="flex items-center gap-2.5">
             <Select value={String(line.grams)} onValueChange={(v) => setSize(line, Number(v))}>
@@ -120,7 +122,7 @@ function CartLine({ line, last }) {
                 ))}
               </SelectContent>
             </Select>
-            <QtyStepper size="md" value={line.qty} onChange={(q) => setQty(line, q)} />
+            <QtyStepper size="md" value={line.qty} max={line.custom ? 500 : 20} onChange={(q) => setQty(line, q)} />
             <button onClick={() => remove(line)} aria-label={`Remove ${line.product.name}`} className="p-1">
               <Icon name="trash" size={18} />
             </button>
@@ -131,6 +133,8 @@ function CartLine({ line, last }) {
           <p className="font-mono text-[11px] text-muted-foreground">{perHundred(line.price, line.grams)}</p>
         </div>
       </div>
+
+      {line.custom?.note && <p className="-mt-2 pl-[88px] text-xs text-muted-foreground sm:pl-[114px]">{line.custom.note}</p>}
 
       {soldOut && (
         <OutOfStock
@@ -148,7 +152,7 @@ function CartLine({ line, last }) {
 }
 
 function CouponCard() {
-  const { coupon, applyCoupon, removeCoupon, totals } = useCart()
+  const { coupon, applyCoupon, removeCoupon, totals, couponIssue } = useCart()
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [showList, setShowList] = useState(false)
@@ -174,7 +178,9 @@ function CouponCard() {
             <Icon name="tag" size={18} />
             <div className="flex-1">
               <p className="text-sm font-bold">{coupon} applied</p>
-              <p className="text-[13px]">You saved {inr(totals.discount)} on this order</p>
+              <p className="text-[13px]">
+                {couponIssue ?? `You saved ${inr(totals.discount)} on this order`}
+              </p>
             </div>
             <button onClick={removeCoupon} className="text-[13px] font-bold text-roast underline">
               Remove
@@ -223,7 +229,7 @@ function CouponCard() {
                 <div>
                   <p className="font-mono text-sm">{c.code}</p>
                   <p className="text-xs text-muted-foreground">
-                    {c.expired ? `Expired ${c.expired}` : `₹${c.value} off + free delivery`}
+                    {c.expired ? `Expired ${c.expired}` : `${c.percent ? `${c.percent}% off (up to ₹${c.max})` : `₹${c.value} off + free delivery`} · min ₹${c.minSubtotal}`}
                   </p>
                 </div>
                 {!c.expired && coupon !== c.code && (
@@ -243,6 +249,7 @@ function CouponCard() {
 function PincodeCheck() {
   const { address, checkout, updateCheckout } = useCart()
   const [editing, setEditing] = useState(false)
+  const [pinError, setPinError] = useState('')
   const [pin, setPin] = useState(checkout.checkPincode ?? address?.pincode ?? '')
   const info = lookupPincode(pin)
 
@@ -255,8 +262,9 @@ function PincodeCheck() {
             e.preventDefault()
             if (info.valid) {
               updateCheckout({ checkPincode: pin })
+              setPinError("")
               setEditing(false)
-            }
+            } else setPinError('Enter a valid 6-digit pincode.')
           }}
         >
           <Input
@@ -279,6 +287,11 @@ function PincodeCheck() {
             Change
           </button>
         </div>
+      )}
+      {editing && pinError && (
+        <p className="text-xs font-medium text-error" role="alert">
+          {pinError}
+        </p>
       )}
       {!editing && info.valid && info.serviceable && (
         <p className="text-[13px] font-medium text-success">Estimated delivery: {deliveryDate()}</p>
